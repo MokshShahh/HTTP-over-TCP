@@ -41,6 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatal("error", err)
 	}
+	defer listner.Close()
 
 	for {
 		conn, err := listner.Accept()
@@ -48,7 +49,7 @@ func main() {
 			log.Fatal("error: ", err)
 		}
 		for line := range getLinesChannel(conn) {
-			fmt.Printf(line)
+			fmt.Printf("read:%s", line)
 		}
 
 	}
