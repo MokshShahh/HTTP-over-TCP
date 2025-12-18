@@ -17,12 +17,8 @@ type RequestLine struct {
 	Method        string
 }
 
-func RequestFromReader(reader io.Reader) (*Request, error) {
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		return nil, err
-	}
-	lines := strings.Split(string(data), "\r\n")
+func parseRequestLine(data string) (*RequestLine, error) {
+	lines := strings.Split(data, "\r\n")
 	requestLine := strings.Fields(lines[0])
 	method := requestLine[0]
 	for _, r := range method {
@@ -37,11 +33,25 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 	if httpVer != "HTTP/1.1" {
 		return nil, fmt.Errorf("incorrect http ver: expected HTTP/1.1, got %s", httpVer)
 	}
+	rl := &RequestLine{
+		Method:        requestLine[0],
+		RequestTarget: requestLine[1],
+		HttpVersion:   "1.1",
+	}
+	return rl, nil
+}
+
+func RequestFromReader(reader io.Reader) (*Request, error) {
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	rl, err := parseRequestLine(string(data))
+	if err != nil {
+		return nil, err
+	}
 	return &Request{
-		RequestLine: RequestLine{
-			Method:        requestLine[0],
-			RequestTarget: requestLine[1],
-			HttpVersion:   "1.1",
-		},
-	}, nil
+		RequestLine: *rl,
+	}, err
+
 }
