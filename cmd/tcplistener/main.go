@@ -1,40 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"net"
+
+	"github.com/MokshShahh/HTTP-over-TCP/internal/request"
 )
-
-func getLinesChannel(f io.ReadCloser) <-chan string {
-	out := make(chan string, 1)
-	go func() {
-		defer f.Close()
-		defer close(out)
-		line := ""
-		for {
-			data := make([]byte, 8)
-			n, err := f.Read(data)
-			data = data[:n]
-			if i := bytes.IndexByte(data, '\n'); i != -1 {
-				line += string(data[:i])
-				data = data[i+1:]
-				out <- line
-				line = ""
-			}
-			line += string(data)
-			if err != nil {
-				break
-			}
-		}
-
-	}()
-
-	return out
-
-}
 
 func main() {
 	listner, err := net.Listen("tcp", ":42069")
@@ -48,9 +20,11 @@ func main() {
 		if err != nil {
 			log.Fatal("error: ", err)
 		}
-		for line := range getLinesChannel(conn) {
-			fmt.Printf("read:%s", line)
+		r, err := request.RequestFromReader(conn)
+		if err != nil {
+			log.Fatal("err", err)
 		}
+		fmt.Printf("Request Line\n- Method: %s\n- Target: %s\n- Version: %s", r.RequestLine.Method, r.RequestLine.RequestTarget, r.RequestLine.HttpVersion)
 
 	}
 }
