@@ -3,6 +3,8 @@ package headers
 import (
 	"bytes"
 	"fmt"
+	"strings"
+	"unicode"
 )
 
 type Headers map[string]string
@@ -27,7 +29,21 @@ func parseHeader(fieldLine []byte) (string, string, error) {
 	if bytes.HasSuffix(name, []byte(" ")) {
 		return "", "", fmt.Errorf("fieldname has whitespace")
 	}
-	return string(name), string(val), nil
+	strname := string(name)
+	strname = strings.ToLower(strname)
+	for _, c := range strname {
+		if unicode.IsDigit(c) || unicode.IsLetter(c) {
+			continue
+		}
+		switch c {
+		case '!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~':
+			continue
+		default:
+			return "", "", fmt.Errorf("invalid character")
+
+		}
+	}
+	return strname, string(val), nil
 }
 
 func (h Headers) Parse(data []byte) (n int, done bool, err error) {
@@ -42,6 +58,7 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 		if idx == 0 {
 			done = true
 			read += len(crlf)
+			return read, done, nil
 		}
 		name, val, err := parseHeader(data[read : read+idx])
 		if err != nil {
