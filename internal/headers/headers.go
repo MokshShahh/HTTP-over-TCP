@@ -65,7 +65,13 @@ func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 			return 0, false, err
 		}
 		read += idx + len(crlf)
-		h[name] = val
+		value, ok := h[name]
+		if ok {
+			v := value + ", " + val
+			h[name] = v
+		} else {
+			h[name] = val
+		}
 	}
 	return read, done, nil
 

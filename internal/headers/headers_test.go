@@ -60,4 +60,18 @@ func TestParseHeaders_Extended(t *testing.T) {
 		assert.Equal(t, "", val)
 		assert.True(t, done)
 	})
+	t.Run("DuplicateHeaderKeys", func(t *testing.T) {
+		headers := NewHeaders()
+		// Multiple instances of the same key
+		data := []byte("Set-Person: lane-loves-go\r\nSet-Person: prime-loves-zig\r\nSet-Person: tj-loves-ocaml\r\n\r\n")
+
+		n, done, err := headers.Parse(data)
+		require.NoError(t, err)
+		assert.True(t, done)
+
+		// Expected result: all values joined by a comma
+		expected := "lane-loves-go, prime-loves-zig, tj-loves-ocaml"
+		assert.Equal(t, expected, headers["set-person"])
+		assert.Equal(t, len(data), n)
+	})
 }
