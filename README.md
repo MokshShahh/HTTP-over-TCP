@@ -17,3 +17,5 @@ The server manages the full lifecycle of an HTTP transaction:
 2. **Byte Stream Processing**: Reads raw data into buffers, handling the transition from transport layer segments to application layer messages.
 3. **State Machine Parsing**: Iterates through bytes to identify the Request Line, Header blocks (separated by `\r\n`), and the message body.
 4. **Response Serialization**: Manually constructs status lines and headers into a valid HTTP response format before writing to the socket.
+
+This is an ongoing project
