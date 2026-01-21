@@ -24,7 +24,10 @@ func main() {
 		if err != nil {
 			log.Fatal("err", err)
 		}
-		fmt.Printf("Request Line\n- Method: %s\n- Target: %s\n- Version: %s", r.RequestLine.Method, r.RequestLine.RequestTarget, r.RequestLine.HttpVersion)
-
+		fmt.Printf("Request Line\n- Method: %s\n- Target: %s\n- Version: %s\n", r.RequestLine.Method, r.RequestLine.RequestTarget, r.RequestLine.HttpVersion)
+		fmt.Println("Headers:")
+		for key, value := range r.Headers {
+			fmt.Printf("- %s: %s\n", key, value)
+		}
 	}
 }
