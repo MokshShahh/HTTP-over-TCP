@@ -5,11 +5,14 @@ import (
 	"io"
 	"strings"
 	"unicode"
+
+	"github.com/MokshShahh/HTTP-over-TCP/internal/headers"
 )
 
 type Request struct {
 	RequestLine RequestLine
 	state       parserState
+	Headers     headers.Headers
 }
 
 type RequestLine struct {
@@ -21,8 +24,9 @@ type RequestLine struct {
 type parserState int
 
 const (
-	StateInit parserState = 0
-	StateDone parserState = 1
+	StateInit           parserState = 0
+	StateParsingHeaders parserState = 1
+	StateDone           parserState = 2
 )
 
 func (r *Request) parse(data []byte) (int, error) {
@@ -41,7 +45,17 @@ func (r *Request) parse(data []byte) (int, error) {
 			}
 			r.RequestLine = *rl
 			read += n
-			r.state = StateDone
+			r.state = StateParsingHeaders
+		case StateParsingHeaders:
+			n, done, err := r.Headers.Parse(data[read:])
+			if err != nil {
+				return 0, err
+			}
+			read += n
+			if done {
+				r.state = StateDone
+			}
+			return read, nil
 
 		}
 	}
@@ -50,35 +64,37 @@ func (r *Request) parse(data []byte) (int, error) {
 
 func newRequest() *Request {
 	return &Request{
-		state: StateInit,
+		state:   StateInit,
+		Headers: make(map[string]string),
 	}
 }
 
 func parseRequestLine(data string) (*RequestLine, int, error) {
-	lines := strings.Split(data, "\r\n")
-	if len(lines) == 1 {
+	idx := strings.Index(data, "\r\n")
+	if idx == -1 {
 		return nil, 0, nil
 	}
-	requestLine := strings.Fields(lines[0])
+	line := data[:idx]
+	requestLine := strings.Fields(line)
 	method := requestLine[0]
 	for _, r := range method {
 		if unicode.IsLetter(r) && !unicode.IsUpper(r) {
-			return nil, len(lines[0]), fmt.Errorf("method is not in all uppercase")
+			return nil, 0, fmt.Errorf("method is not in all uppercase")
 		}
 		if !unicode.IsLetter(r) {
-			return nil, len(lines[0]), fmt.Errorf("method is not alphabetical")
+			return nil, 0, fmt.Errorf("method is not alphabetical")
 		}
 	}
 	httpVer := strings.TrimSpace(requestLine[2])
 	if httpVer != "HTTP/1.1" {
-		return nil, len(lines[0]), fmt.Errorf("incorrect http ver: expected HTTP/1.1, got %s", httpVer)
+		return nil, 0, fmt.Errorf("incorrect http ver: expected HTTP/1.1, got %s", httpVer)
 	}
 	rl := &RequestLine{
 		Method:        requestLine[0],
 		RequestTarget: requestLine[1],
 		HttpVersion:   "1.1",
 	}
-	return rl, len(lines[0]), nil
+	return rl, idx + 2, nil
 }
 
 func RequestFromReader(reader io.Reader) (*Request, error) {
