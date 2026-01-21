@@ -18,8 +18,6 @@ func NewHeaders() Headers {
 func parseHeader(fieldLine []byte) (string, string, error) {
 	parts := bytes.SplitN(fieldLine, []byte(":"), 2)
 	if len(parts) != 2 {
-		fmt.Print("hi")
-		fmt.Printf("%d", len(parts))
 		return "", "", fmt.Errorf("Header is not in correct form")
 	}
 	name := parts[0]
