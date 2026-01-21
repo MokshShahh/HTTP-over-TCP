@@ -65,7 +65,7 @@ func (r *Request) parse(data []byte) (int, error) {
 func newRequest() *Request {
 	return &Request{
 		state:   StateInit,
-		Headers: make(map[string]string),
+		Headers: headers.Headers{},
 	}
 }
 
