@@ -13,6 +13,7 @@ type Request struct {
 	RequestLine RequestLine
 	state       parserState
 	Headers     headers.Headers
+	Body        []byte
 }
 
 type RequestLine struct {
@@ -26,7 +27,8 @@ type parserState int
 const (
 	StateInit           parserState = 0
 	StateParsingHeaders parserState = 1
-	StateDone           parserState = 2
+	StateParsingBody    parserState = 2
+	StateDone           parserState = 3
 )
 
 func (r *Request) parse(data []byte) (int, error) {
