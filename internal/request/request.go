@@ -55,9 +55,16 @@ func (r *Request) parse(data []byte) (int, error) {
 			}
 			read += n
 			if done {
-				r.state = StateDone
+				_, ok := r.Headers.Get("Content-Length")
+				if !ok {
+					r.state = StateDone
+				} else {
+					r.state = StateParsingBody
+				}
 			}
 			return read, nil
+		case StateParsingBody:
+			//#TODO: complete func to parse the body acc to content length header
 
 		}
 	}

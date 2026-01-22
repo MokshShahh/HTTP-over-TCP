@@ -44,6 +44,12 @@ func parseHeader(fieldLine []byte) (string, string, error) {
 	return strname, string(val), nil
 }
 
+func (h Headers) Get(key string) (string, bool) {
+	loweredKey := strings.ToLower(key)
+	val, ok := h[loweredKey]
+	return val, ok
+}
+
 func (h Headers) Parse(data []byte) (n int, done bool, err error) {
 	read := 0
 	done = false
