@@ -62,29 +62,33 @@ func (r *Request) parse(data []byte) (int, error) {
 				} else {
 					r.state = StateParsingBody
 				}
+			} else {
+				return read, nil
 			}
-			return read, nil
+
 		case StateParsingBody:
 			length, _ := r.Headers.Get("Content-Length")
-			remainingData := data[read:]
-			bytesRead := len(remainingData)
-			r.Body = append(r.Body, data[read:]...)
 			contentLen, err := strconv.Atoi(length)
 			if err != nil {
 				return 0, err
 			}
-			fmt.Print(contentLen)
-			fmt.Print("\n")
-			fmt.Print(len(r.Body))
-			if len(r.Body) > contentLen {
-				return 0, fmt.Errorf("len of body doesnt match content len header")
-			}
-			if contentLen == len(r.Body) {
+
+			remainingData := data[read:]
+			bytesRead := len(remainingData)
+
+			fmt.Printf("DEBUG: ContentLen=%d, CurrentBodyLen=%d, RemainingData=%d\n",
+				contentLen, len(r.Body), bytesRead)
+
+			r.Body = append(r.Body, remainingData...)
+			read += bytesRead
+
+			if len(r.Body) >= contentLen {
+				if len(r.Body) > contentLen {
+					return 0, fmt.Errorf("body length %d exceeds content-length %d", len(r.Body), contentLen)
+				}
 				r.state = StateDone
-
 			}
-			return read + bytesRead, nil
-
+			return read, nil
 		}
 	}
 
@@ -130,6 +134,9 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 	buf := make([]byte, 1024)
 	bufLen := 0
 	for {
+		if request.state == StateDone {
+			break
+		}
 		n, err := reader.Read(buf[bufLen:])
 		if err != nil {
 			return nil, err

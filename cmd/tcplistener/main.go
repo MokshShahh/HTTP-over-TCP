@@ -18,7 +18,8 @@ func main() {
 	for {
 		conn, err := listner.Accept()
 		if err != nil {
-			log.Fatal("error: ", err)
+			log.Print("error: ", err)
+			continue
 		}
 		r, err := request.RequestFromReader(conn)
 		if err != nil {
@@ -29,5 +30,6 @@ func main() {
 		for key, value := range r.Headers {
 			fmt.Printf("- %s: %s\n", key, value)
 		}
+		fmt.Printf("Body:%s", string(r.Body))
 	}
 }
