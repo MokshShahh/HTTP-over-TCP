@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -64,7 +65,25 @@ func (r *Request) parse(data []byte) (int, error) {
 			}
 			return read, nil
 		case StateParsingBody:
-			//#TODO: complete func to parse the body acc to content length header
+			length, _ := r.Headers.Get("Content-Length")
+			remainingData := data[read:]
+			bytesRead := len(remainingData)
+			r.Body = append(r.Body, data[read:]...)
+			contentLen, err := strconv.Atoi(length)
+			if err != nil {
+				return 0, err
+			}
+			fmt.Print(contentLen)
+			fmt.Print("\n")
+			fmt.Print(len(r.Body))
+			if len(r.Body) > contentLen {
+				return 0, fmt.Errorf("len of body doesnt match content len header")
+			}
+			if contentLen == len(r.Body) {
+				r.state = StateDone
+
+			}
+			return read + bytesRead, nil
 
 		}
 	}
