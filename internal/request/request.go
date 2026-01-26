@@ -76,9 +76,6 @@ func (r *Request) parse(data []byte) (int, error) {
 			remainingData := data[read:]
 			bytesRead := len(remainingData)
 
-			fmt.Printf("DEBUG: ContentLen=%d, CurrentBodyLen=%d, RemainingData=%d\n",
-				contentLen, len(r.Body), bytesRead)
-
 			r.Body = append(r.Body, remainingData...)
 			read += bytesRead
 
