@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/MokshShahh/HTTP-over-TCP/internal/request"
+	"github.com/MokshShahh/HTTP-over-TCP/internal/response"
 )
 
 type Server struct {
@@ -50,14 +51,15 @@ func (s *Server) handle(conn net.Conn) {
 		log.Printf("Request error: %v", err)
 		return
 	}
-
-	response := "HTTP/1.1 200 OK\r\n" +
-		"Content-Type: text/plain\r\n" +
-		"Content-Length: 13\r\n" +
-		"\r\n" +
-		"Hello World!"
-
-	conn.Write([]byte(response))
+	err = response.WriteStatusLine(conn, 200)
+	if err != nil {
+		return
+	}
+	h := response.GetDefaultHeaders(0)
+	err = response.WriteHeaders(conn, h)
+	if err != nil {
+		return
+	}
 }
 
 func (s *Server) Close() error {

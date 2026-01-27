@@ -23,11 +23,11 @@ func WriteStatusLine(w io.Writer, statusCode StatusCode) error {
 	statusLine := []byte{}
 	switch statusCode {
 	case StatusOK:
-		statusLine = []byte("HTTP/1.1 200 OK")
+		statusLine = []byte("HTTP/1.1 200 OK\r\n")
 	case StatusBadReq:
-		statusLine = []byte("HTTP/1.1 400 Bad Request")
+		statusLine = []byte("HTTP/1.1 400 Bad Request\r\n")
 	case StatusServerErr:
-		statusLine = []byte("HTTP/1.1 500 Internal Server Error")
+		statusLine = []byte("HTTP/1.1 500 Internal Server Error\r\n")
 	default:
 		return fmt.Errorf("unrecognised code")
 	}
@@ -46,14 +46,11 @@ func GetDefaultHeaders(contentLen int) headers.Headers {
 
 func WriteHeaders(w io.Writer, headers headers.Headers) error {
 	for key, value := range headers {
-		_, err := w.Write([]byte(fmt.Sprintf("%s : %s\r\n", key, value)))
+		_, err := w.Write([]byte(fmt.Sprintf("%s: %s\r\n", key, value)))
 		if err != nil {
 			return err
 		}
 	}
 	_, err := w.Write([]byte("\r\n"))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
