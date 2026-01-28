@@ -13,9 +13,18 @@ import (
 type Server struct {
 	listener net.Listener
 	closed   atomic.Bool
+	handler Handler
+}
+type HandlerError struct {
+	StatusCode response.StatusCode
+	Message    string
 }
 
-func Serve(port int) (*Server, error) {
+type Handler func(w io.Writer, req *request.Request) *HandlerError{
+
+}
+
+func Serve(port int, handler Handler) (*Server, error) {
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil, err
@@ -23,6 +32,7 @@ func Serve(port int) (*Server, error) {
 
 	s := &Server{
 		listener: l,
+		handler: handler
 	}
 
 	go s.listen()
