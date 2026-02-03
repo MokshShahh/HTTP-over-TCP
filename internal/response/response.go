@@ -92,7 +92,7 @@ func GetDefaultHeaders(contentLen int) headers.Headers {
 	h := headers.NewHeaders()
 	h["content-length"] = strconv.Itoa(contentLen)
 	h["connection"] = "close"
-	h["content-type"] = "text/plain"
+	h["content-type"] = "text/html"
 	return h
 
 }

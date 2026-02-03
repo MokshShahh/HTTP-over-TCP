@@ -1,9 +1,7 @@
 package server
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"sync/atomic"
@@ -22,13 +20,13 @@ type HandlerError struct {
 	Message    string
 }
 
-type Handler func(w io.Writer, req *request.Request) *HandlerError
+type Handler func(w *response.Writer, req *request.Request) *HandlerError
 
-func writeError(w io.Writer, err *HandlerError) {
-	response.WriteStatusLine(w, err.StatusCode)
+func writeError(w *response.Writer, err *HandlerError) {
+	w.WriteStatusLine(err.StatusCode)
 	h := response.GetDefaultHeaders(len(err.Message))
-	response.WriteHeaders(w, h)
-	w.Write([]byte(err.Message))
+	w.WriteHeaders(h)
+	w.WriteBody([]byte(err.Message))
 }
 
 func Serve(port int, handler Handler) (*Server, error) {
@@ -68,22 +66,14 @@ func (s *Server) handle(conn net.Conn) {
 		log.Printf("Request error: %v", err)
 		return
 	}
-	buf := new(bytes.Buffer)
-	handlerErr := s.handler(buf, req)
+
+	resWriter := response.NewWriter(conn)
+	handlerErr := s.handler(resWriter, req)
+
 	if handlerErr != nil {
-		writeError(conn, handlerErr)
+		writeError(resWriter, handlerErr)
 		return
 	}
-	err = response.WriteStatusLine(conn, 200)
-	if err != nil {
-		return
-	}
-	h := response.GetDefaultHeaders(len(buf.Bytes()))
-	err = response.WriteHeaders(conn, h)
-	if err != nil {
-		return
-	}
-	conn.Write(buf.Bytes())
 }
 
 func (s *Server) Close() error {
